@@ -1,0 +1,17 @@
+{
+  "name": "nyc-train-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "node server/server.js",
+    "stops": "node scripts/listStops.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "protobufjs": "^7.4.0"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

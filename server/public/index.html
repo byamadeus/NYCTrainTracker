@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>NYC Trains</title>
+  <style>
+    * { margin:0; padding:0; -webkit-box-sizing:border-box; box-sizing:border-box; }
+
+    body {
+      background: #000;
+      color: #ccc;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 15px;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Two-column wrapper ── */
+    #wrapper { overflow: hidden; height: 100vh; }
+
+    #left {
+      float: left;
+      width: 230px;
+      height: 100vh;
+      padding: 20px 16px;
+      border-right: 1px solid #1a1a1a;
+      display: table;         /* vertically distribute children */
+      vertical-align: top;
+    }
+
+    #right {
+      margin-left: 230px;
+      height: 100vh;
+      padding: 16px 20px;
+      overflow: hidden;
+    }
+
+    /* ── Left column internals ── */
+    .figure-wrap {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #1a1a1a;
+      margin-bottom: 18px;
+    }
+
+    #toggle-label {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: #444;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .toggle-row { margin-bottom: 8px; }
+
+    .tbadge {
+      display: inline-block;
+      width: 38px;
+      height: 38px;
+      -webkit-border-radius: 19px;
+      border-radius: 19px;
+      text-align: center;
+      line-height: 38px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 6px;
+      -webkit-transition: opacity 0.15s;
+      transition: opacity 0.15s;
+    }
+    .tbadge.off { opacity: 0.18; }
+
+    /* ── Right column: two panels ── */
+    .panel {
+      border: 1px solid #222;
+      margin-bottom: 14px;
+    }
+
+    .panel-head {
+      padding: 7px 14px;
+      border-bottom: 1px solid #222;
+      overflow: hidden;
+    }
+    .panel-head .dir-label {
+      float: right;
+      font-size: 12px;
+      letter-spacing: 4px;
+      color: #555;
+    }
+    .panel-head .clock {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      letter-spacing: 1px;
+    }
+
+    /* ── Train rows ── */
+    .train-row {
+      display: table;
+      width: 100%;
+      border-bottom: 1px solid #0f0f0f;
+    }
+    .train-row.missed-row { opacity: 0.38; }
+
+    .cell { display: table-cell; vertical-align: middle; padding: 11px 0; }
+
+    .c-status { width: 72px;  padding-left: 14px; font-size: 13px; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; }
+    .c-mins   { width: 82px;  font-size: 13px; color: #555; }
+    .c-badge  { width: 50px; }
+    .c-from   { font-size: 14px; color: #555; padding-left: 4px; }
+    .c-time   { width: 80px; text-align: right; padding-right: 14px; font-size: 14px; color: #4a4a4a; }
+
+    .lbadge {
+      display: inline-block;
+      width: 36px;
+      height: 36px;
+      -webkit-border-radius: 18px;
+      border-radius: 18px;
+      text-align: center;
+      line-height: 36px;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .s-walk   { color: #6ee7b7; }   /* green  — relax */
+    .s-run    { color: #fde68a; }   /* amber  — hustle */
+    .s-missed { color: #383838; }   /* dim    — gone   */
+
+    .no-trains {
+      padding: 16px 14px;
+      font-size: 13px;
+      color: #2a2a2a;
+      letter-spacing: 1px;
+    }
+
+    /* ── Footer ── */
+    #footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 4px 14px;
+      font-size: 11px;
+      color: #262626;
+      border-top: 1px solid #111;
+      background: #000;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="wrapper">
+
+  <!-- ── Left: figure + toggles ─────────────────── -->
+  <div id="left">
+
+    <div class="figure-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="86" height="130" viewBox="0 0 86 130">
+        <circle cx="43" cy="16" r="14" fill="#fff"/>
+        <line x1="43" y1="30" x2="43" y2="82" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+        <line x1="43" y1="48" x2="14" y2="68" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+        <line x1="43" y1="48" x2="70" y2="60" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+        <line x1="43" y1="82" x2="22" y2="126" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+        <line x1="43" y1="82" x2="63" y2="122" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <div id="toggle-label">Toggle</div>
+
+    <div class="toggle-row">
+      <span class="tbadge" id="tb-A" onclick="toggle('A')" style="background:#0039A6;color:#fff">A</span>
+      <span class="tbadge" id="tb-C" onclick="toggle('C')" style="background:#0039A6;color:#fff">C</span>
+      <span class="tbadge" id="tb-E" onclick="toggle('E')" style="background:#0039A6;color:#fff">E</span>
+    </div>
+    <div class="toggle-row">
+      <span class="tbadge" id="tb-N" onclick="toggle('N')" style="background:#FCCC0A;color:#000">N</span>
+      <span class="tbadge" id="tb-W" onclick="toggle('W')" style="background:#FCCC0A;color:#000">W</span>
+      <span class="tbadge" id="tb-R" onclick="toggle('R')" style="background:#FCCC0A;color:#000">R</span>
+      <span class="tbadge" id="tb-Q" onclick="toggle('Q')" style="background:#FCCC0A;color:#000">Q</span>
+    </div>
+    <div class="toggle-row">
+      <span class="tbadge" id="tb-1" onclick="toggle('1')" style="background:#EE352E;color:#fff">1</span>
+      <span class="tbadge" id="tb-2" onclick="toggle('2')" style="background:#EE352E;color:#fff">2</span>
+      <span class="tbadge" id="tb-3" onclick="toggle('3')" style="background:#EE352E;color:#fff">3</span>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- ── Right: Uptown + Downtown panels ────────── -->
+  <div id="right">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="dir-label">UPTOWN</span>
+        <span class="clock" id="clock-up"></span>
+      </div>
+      <div id="uptown"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="dir-label">DOWNTOWN</span>
+        <span class="clock" id="clock-dn"></span>
+      </div>
+      <div id="downtown"></div>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<div id="footer" id="footer">
+  <span id="status">connecting...</span>
+</div>
+
+<script>
+
+// ── Line badge colors ─────────────────────────────
+var COLORS = {
+  'A':['#0039A6','#fff'], 'C':['#0039A6','#fff'], 'E':['#0039A6','#fff'],
+  'N':['#FCCC0A','#000'], 'Q':['#FCCC0A','#000'], 'R':['#FCCC0A','#000'], 'W':['#FCCC0A','#000'],
+  '1':['#EE352E','#fff'], '2':['#EE352E','#fff'], '3':['#EE352E','#fff'],
+  '4':['#00933C','#fff'], '5':['#00933C','#fff'], '6':['#00933C','#fff'],
+  'L':['#A7A9AC','#000'], 'G':['#6CBE45','#000'],
+  'B':['#FF6319','#fff'], 'D':['#FF6319','#fff'], 'F':['#FF6319','#fff'], 'M':['#FF6319','#fff'],
+  'J':['#996633','#fff'], 'Z':['#996633','#fff'], '7':['#B933AD','#fff']
+};
+
+// ── Walk/Run/Missed thresholds (minutes until train) ──
+// Walk = you can stroll.  Run = you need to hustle.  Missed = can't make it.
+var THRESH = {
+  '50th': { walk: 12, run: 8  },
+  '49th': { walk: 10, run: 7  },
+  '42nd': { walk: 8,  run: 6  }
+};
+
+function getStatus(station, mins) {
+  var t = THRESH[station] || THRESH['50th'];
+  if (mins >= t.walk) return 'walk';
+  if (mins >= t.run)  return 'run';
+  return 'missed';
+}
+
+// ── Toggle state ──────────────────────────────────
+var enabled = {
+  'A':true,'C':true,'E':true,
+  'N':true,'W':true,'R':true,'Q':true,
+  '1':true,'2':true,'3':true
+};
+
+function toggle(line) {
+  enabled[line] = !enabled[line];
+  var el = document.getElementById('tb-' + line);
+  if (el) el.className = 'tbadge' + (enabled[line] ? '' : ' off');
+  render();
+}
+
+// ── Helpers ───────────────────────────────────────
+function clockStr(ts) {
+  var d = new Date(ts * 1000);
+  var h = d.getHours() % 12 || 12;
+  var m = d.getMinutes();
+  return h + ':' + (m < 10 ? '0' + m : m) + (d.getHours() < 12 ? 'am' : 'pm');
+}
+
+function nowClockStr() {
+  var d = new Date();
+  var h = d.getHours() % 12 || 12;
+  var m = d.getMinutes();
+  var s = d.getSeconds();
+  return h + ':' + (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s) + (d.getHours() < 12 ? 'am' : 'pm');
+}
+
+function minsLabel(mins) {
+  if (mins <= 0)  return 'now';
+  if (mins < 1.5) return '<2 min';
+  return '~' + Math.round(mins) + ' min';
+}
+
+function lbadge(line) {
+  var c = COLORS[line] || ['#555','#ccc'];
+  return '<span class="lbadge" style="background:' + c[0] + ';color:' + c[1] + '">' + line + '</span>';
+}
+
+// ── Render ────────────────────────────────────────
+var cachedArrivals = [];
+
+function renderPanel(elId, arrivals) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+
+  if (arrivals.length === 0) {
+    el.innerHTML = '<div class="no-trains">— no trains —</div>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < arrivals.length; i++) {
+    var a = arrivals[i];
+    var statusClass = 's-' + a.status;
+    var rowClass = 'train-row' + (a.status === 'missed' ? ' missed-row' : '');
+    html += '<div class="' + rowClass + '">';
+    html +=   '<div class="cell c-status ' + statusClass + '">' + a.status + '</div>';
+    html +=   '<div class="cell c-mins ' + statusClass + '">'   + minsLabel(a.mins) + '</div>';
+    html +=   '<div class="cell c-badge">' + lbadge(a.line) + '</div>';
+    html +=   '<div class="cell c-from">from ' + a.station + '</div>';
+    html +=   '<div class="cell c-time">' + clockStr(a.ts) + '</div>';
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function render() {
+  var nowTs   = Date.now() / 1000;
+  var uptown  = [];
+  var downtown = [];
+
+  for (var i = 0; i < cachedArrivals.length; i++) {
+    var a = cachedArrivals[i];
+    if (!enabled[a.line]) continue;
+
+    var mins   = (a.ts - nowTs) / 60;
+    if (mins < -0.5) continue;          // departed over 30s ago — drop it
+
+    var status = getStatus(a.station, mins);
+    if (status === 'missed') continue;   // only show trains you can still catch
+    var item   = { line: a.line, ts: a.ts, station: a.station, mins: mins, status: status };
+
+    if (a.dir === 'N') uptown.push(item);
+    else               downtown.push(item);
+  }
+
+  // Each panel: sort by arrival, cap at 4
+  uptown.sort(function(x,y)  { return x.ts - y.ts; });
+  downtown.sort(function(x,y){ return x.ts - y.ts; });
+
+  renderPanel('uptown',   uptown.slice(0, 4));
+  renderPanel('downtown', downtown.slice(0, 4));
+}
+
+// ── Tick: recompute times every 10s without a server hit ─────────────────────
+function tick() {
+  var t = nowClockStr();
+  document.getElementById('clock-up').textContent = t;
+  document.getElementById('clock-dn').textContent = t;
+  render();
+}
+
+// ── Poll server every 30s ─────────────────────────
+function poll() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/arrivals', true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4) return;
+    if (xhr.status === 200) {
+      try {
+        var data = JSON.parse(xhr.responseText);
+        cachedArrivals = data.arrivals || [];
+        render();
+        document.getElementById('status').textContent =
+          'fetched ' + cachedArrivals.length + ' trains · ' + nowClockStr();
+      } catch(e) {
+        document.getElementById('status').textContent = 'parse error';
+      }
+    } else {
+      document.getElementById('status').textContent = 'server error ' + xhr.status;
+    }
+  };
+  xhr.send();
+}
+
+poll();
+setInterval(poll,  30000);
+tick();
+setInterval(tick,  10000);
+
+</script>
+</body>
+</html>
