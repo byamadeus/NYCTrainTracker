@@ -12,6 +12,7 @@
       color: #e8e8e8;
       font-family: 'Courier New', Courier, monospace;
       font-size: 17px;
+      font-weight: bold;
       height: 100vh;
       overflow: hidden;
     }
@@ -32,6 +33,10 @@
       height: 100vh;
       padding: 16px 20px 40px 20px;
       overflow: hidden;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
     }
 
     /* ── Left column ── */
@@ -57,11 +62,12 @@
       padding: 9px 10px;
       margin-bottom: 5px;
       background: transparent;
-      color: #3a3a3a;
-      border: 1px solid #232323;
+      color: #969696;
+      border: 1px solid #5b5b5b;
       font-family: 'Courier New', Courier, monospace;
       font-size: 0.75em;
       letter-spacing: 3px;
+      font-weight: 700;
       text-align: left;
       cursor: pointer;
       text-transform: uppercase;
@@ -78,6 +84,7 @@
       bottom: 20px;
       left: 14px;
       right: 14px;
+      color: #bababa;
     }
 
     .ctrl-row {
@@ -86,14 +93,14 @@
       margin-bottom: 5px;
     }
     .ctrl-cell { display: table-cell; }
-    .ctrl-cell-mid { display: table-cell; text-align: center; font-size: 0.65em; color: #555; letter-spacing: 2px; vertical-align: middle; }
+    .ctrl-cell-mid { display: table-cell; text-align: center; font-size: 0.65em; color: #bababa; letter-spacing: 2px; vertical-align: middle; }
 
     .ctrl-btn {
       display: block;
       width: 100%;
       padding: 7px 0;
       background: transparent;
-      color: #444;
+      color: #9a9a9a;
       border: 1px solid #232323;
       font-family: 'Courier New', Courier, monospace;
       font-size: 0.75em;
@@ -108,12 +115,21 @@
     .panel {
       border: 1px solid #2a2a2a;
       margin-bottom: 14px;
+      -webkit-flex: 1;
+      flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .panel-head {
       padding: 7px 14px;
       border-bottom: 1px solid #2a2a2a;
       overflow: hidden;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
     }
     .panel-head .dir-label {
       float: right;
@@ -147,11 +163,12 @@
       color: #777;
       text-transform: uppercase;
       line-height: 22px;
+      font-weight: 700;
       cursor: pointer;
     }
     .stn-header-name:hover { color: #bbb; }
 
-    .stn-header-badges { float: right; }
+    .line-row { margin-bottom: 6px; }
 
     .sbadge {
       display: inline-block;
@@ -196,6 +213,13 @@
       font-weight: bold;
     }
 
+    #uptown, #downtown {
+      -webkit-flex: 1;
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .s-walk { color: #6ee7b7; }
     .s-run  { color: #fde68a; }
 
@@ -219,12 +243,13 @@
       bottom: 0; left: 0; right: 0;
       padding: 4px 14px;
       font-size: 0.7em;
-      color: #444;
+      color: #a0a0a0;
       border-top: 1px solid #141414;
       background: #000;
       letter-spacing: 1px;
     }
   </style>
+  <style id="badge-style">/* badge size — overwritten by JS */</style>
 </head>
 <body>
 
@@ -250,11 +275,34 @@
     <button class="stn-btn active" id="stn-49th" onclick="toggleStation('49th')">49th St</button>
     <button class="stn-btn active" id="stn-42nd" onclick="toggleStation('42nd')">42nd St</button>
 
+    <div class="section-label" style="margin-top:14px">Lines</div>
+    <div class="line-row">
+      <span class="sbadge" id="lb-A" onclick="toggle('A')" style="background:#0039A6;color:#fff">A</span>
+      <span class="sbadge" id="lb-C" onclick="toggle('C')" style="background:#0039A6;color:#fff">C</span>
+      <span class="sbadge" id="lb-E" onclick="toggle('E')" style="background:#0039A6;color:#fff">E</span>
+    </div>
+    <div class="line-row">
+      <span class="sbadge" id="lb-N" onclick="toggle('N')" style="background:#FCCC0A;color:#000">N</span>
+      <span class="sbadge" id="lb-Q" onclick="toggle('Q')" style="background:#FCCC0A;color:#000">Q</span>
+      <span class="sbadge" id="lb-R" onclick="toggle('R')" style="background:#FCCC0A;color:#000">R</span>
+      <span class="sbadge" id="lb-W" onclick="toggle('W')" style="background:#FCCC0A;color:#000">W</span>
+    </div>
+    <div class="line-row">
+      <span class="sbadge" id="lb-1" onclick="toggle('1')" style="background:#EE352E;color:#fff">1</span>
+      <span class="sbadge" id="lb-2" onclick="toggle('2')" style="background:#EE352E;color:#fff">2</span>
+      <span class="sbadge" id="lb-3" onclick="toggle('3')" style="background:#EE352E;color:#fff">3</span>
+    </div>
+
     <div id="bottom-ctrl">
       <div class="ctrl-row">
         <div class="ctrl-cell"><button class="ctrl-btn" onclick="adjustFont(-1)">A&minus;</button></div>
         <div class="ctrl-cell-mid" id="font-label">17px</div>
         <div class="ctrl-cell"><button class="ctrl-btn" onclick="adjustFont(1)">A+</button></div>
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-cell"><button class="ctrl-btn" onclick="adjustBadge(-1)">B&minus;</button></div>
+        <div class="ctrl-cell-mid" id="badge-label">34px</div>
+        <div class="ctrl-cell"><button class="ctrl-btn" onclick="adjustBadge(1)">B+</button></div>
       </div>
       <button class="ctrl-btn" onclick="goFullscreen()" style="width:100%">[ fullscreen ]</button>
     </div>
@@ -309,22 +357,14 @@ var STATION_ORDER = ['50th', '49th', '42nd'];
 
 var STATION_NAMES = { '50th': '50th St', '49th': '49th St', '42nd': '42nd St' };
 
-// Lines that physically stop at each station
-var STATION_LINES = {
-  '50th': ['C','E'],
-  '49th': ['N','R','W'],
-  '42nd': ['A','C','E','N','Q','R','W','1','2','3']
-};
 
 // ── State ─────────────────────────────────────────
-// Station-level on/off
 var enabledStation = { '50th': true, '49th': true, '42nd': true };
 
-// Per-station line on/off (independent — C at 50th != C at 42nd)
-var enabledLine = {
-  '50th': { 'C':true, 'E':true },
-  '49th': { 'N':true, 'R':true, 'W':true },
-  '42nd': { 'A':true,'C':true,'E':true,'N':true,'Q':true,'R':true,'W':true,'1':true,'2':true,'3':true }
+var enabled = {
+  'A':true,'C':true,'E':true,
+  'N':true,'Q':true,'R':true,'W':true,
+  '1':true,'2':true,'3':true
 };
 
 // ── Toggles ───────────────────────────────────────
@@ -335,18 +375,18 @@ function toggleStation(key) {
   render();
 }
 
-function toggleLine(station, line) {
-  enabledLine[station][line] = !enabledLine[station][line];
-  var badge = document.getElementById('lb-' + station + '-' + line);
+function toggle(line) {
+  enabled[line] = !enabled[line];
+  var badge = document.getElementById('lb-' + line);
   if (badge) {
-    var on = enabledLine[station][line];
+    var on = enabled[line];
     badge.className = badge.className.replace(/\s*\boff\b/g, '') + (on ? '' : ' off');
   }
   render();
 }
 
 // ── Font size ─────────────────────────────────────
-var FONT_SIZES = [14, 17, 21, 26];
+var FONT_SIZES = [14, 17, 21, 26, 32];
 var fontIdx = 1;  // default 17px
 
 function adjustFont(dir) {
@@ -354,6 +394,27 @@ function adjustFont(dir) {
   var px = FONT_SIZES[fontIdx];
   document.body.style.fontSize = px + 'px';
   document.getElementById('font-label').textContent = px + 'px';
+}
+
+// ── Badge size ────────────────────────────────────
+var BADGE_SIZES = [22, 28, 34, 42, 52];
+var badgeIdx = 2;  // default 34px
+
+function applyBadgeSize() {
+  var s = BADGE_SIZES[badgeIdx];
+  var r = Math.floor(s / 2);
+  var f = Math.floor(s * 0.47);
+  document.getElementById('badge-style').textContent =
+    '.lbadge{width:' + s + 'px;height:' + s + 'px;' +
+    '-webkit-border-radius:' + r + 'px;border-radius:' + r + 'px;' +
+    'line-height:' + s + 'px;font-size:' + f + 'px}' +
+    '.c-badge{width:' + (s + 16) + 'px}';
+  document.getElementById('badge-label').textContent = s + 'px';
+}
+
+function adjustBadge(dir) {
+  badgeIdx = (badgeIdx + dir + BADGE_SIZES.length) % BADGE_SIZES.length;
+  applyBadgeSize();
 }
 
 // ── Fullscreen ────────────────────────────────────
@@ -400,15 +461,6 @@ function lbadge(line) {
   return '<span class="lbadge" style="background:' + c[0] + ';color:' + c[1] + '">' + line + '</span>';
 }
 
-function sbadgeHtml(station, line) {
-  var c   = COLORS[line] || ['#555','#ccc'];
-  var on  = enabledLine[station][line];
-  var cls = 'sbadge' + (on ? '' : ' off');
-  return '<span class="' + cls + '" id="lb-' + station + '-' + line + '"'
-       + ' onclick="toggleLine(\'' + station + '\',\'' + line + '\')"'
-       + ' style="background:' + c[0] + ';color:' + c[1] + '">' + line + '</span>';
-}
-
 // ── Render ────────────────────────────────────────
 var cachedArrivals = [];
 
@@ -424,16 +476,10 @@ function renderPanel(elId, dir) {
     var stn = STATION_ORDER[si];
     if (!enabledStation[stn]) continue;
 
-    // Build line-badge subheader
+    // Station subheader (name only — click to dismiss)
     html += '<div class="stn-header">';
     html +=   '<span class="stn-header-name" onclick="toggleStation(\'' + stn + '\')">'
             + STATION_NAMES[stn] + '</span>';
-    html +=   '<span class="stn-header-badges">';
-    var lines = STATION_LINES[stn];
-    for (var li = 0; li < lines.length; li++) {
-      html += sbadgeHtml(stn, lines[li]);
-    }
-    html +=   '</span>';
     html += '</div>';
 
     // Collect catchable trains for this direction + station
@@ -442,7 +488,7 @@ function renderPanel(elId, dir) {
       var a = cachedArrivals[i];
       if (a.station !== stn) continue;
       if (a.dir !== dir)     continue;
-      if (!enabledLine[stn][a.line]) continue;
+      if (!enabled[a.line])  continue;
 
       var mins = (a.ts - nowTs) / 60;
       if (mins < -0.5) continue;
@@ -516,6 +562,7 @@ function poll() {
   xhr.send();
 }
 
+applyBadgeSize();
 poll();
 setInterval(poll, 30000);
 tick();
