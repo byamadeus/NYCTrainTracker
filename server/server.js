@@ -179,6 +179,7 @@ app.get('/arrivals', function(req, res) { res.json(cache); });
 
 // Mobile page: arrivals for any station by id (see public/stations.json)
 app.get('/station', require('../api/station'));
+app.get('/m', function(req, res) { res.sendFile(path.join(__dirname, '../public/m.html')); });
 
 app.listen(PORT, function() {
   var ip = 'localhost';
