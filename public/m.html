@@ -70,14 +70,10 @@
     }
     .row .mins { flex:1; padding-left:16px; font-size:28px; color:#e8e8e8; }
     .row .mins small { font-size:15px; color:#9a9a9a; }
-    .row .mid .to { display:block; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#8a8a8a; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .row .mid .to b { color:#bbb; font-weight:bold; }
     .row.soon .mins { color:#6ee7b7; }
     .row .clk { font-size:15px; color:#8a8a8a; }
     .row.far .badge { width:36px; height:36px; line-height:36px; font-size:18px; border-radius:18px; margin:0 4px; }
     .row.far .mins { font-size:20px; color:#bbb; }
-    .row .mid { flex:1; min-width:0; padding-left:16px; }
-    .row .mid .mins { padding-left:0; }
 
     .msg { padding:28px 16px; font-size:14px; letter-spacing:2px; color:#6a6a6a; text-transform:uppercase; line-height:1.6; }
 
@@ -87,10 +83,13 @@
     #adjust { display:none; width:100%; padding:16px 0; font-size:14px; letter-spacing:4px; text-transform:uppercase; border:0; color:#cfcfcf; }
     #dock.min #adjust { display:block; }
 
-    #readout { text-align:center; padding:10px 12px 0; min-height:62px; }
+    #readout { text-align:center; padding:10px 12px 0; min-height:92px; }
     #readout .big { font-size:20px; letter-spacing:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     #readout .sub { font-size:12px; letter-spacing:2px; color:#8a8a8a; margin-top:3px; text-transform:uppercase; }
 
+    #readout .dest { display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; color:#cfcfcf; margin-top:4px; white-space:nowrap; }
+    #readout .dest .nm { overflow:hidden; text-overflow:ellipsis; letter-spacing:0; }
+    #readout .dest .mb { display:inline-block; width:18px; height:18px; border-radius:9px; font-size:10px; line-height:18px; text-align:center; margin-right:2px; }
     #dial { position:relative; height:232px; overflow:hidden; touch-action:none; }
     .item {
       position:absolute; left:50%; top:0;
@@ -301,6 +300,7 @@ function fetchArrivals() {
       listState = 'error';
     }
     renderList();
+    if (step === 1) onDialMove();
   };
   xhr.send();
 }
@@ -310,10 +310,6 @@ function startPolling() {
 }
 
 // ── List ──────────────────────────────────────────
-function toLabel(a) {
-  if (a.end) return '<div class="to">ends here</div>';
-  return a.to ? '<div class="to">toward <b>' + esc(a.to) + '</b></div>' : '';
-}
 
 function renderList() {
   var st = station();
@@ -338,7 +334,7 @@ function renderList() {
     var label = mins < 0.5 ? 'now' : Math.max(1, Math.round(mins)) + '<small> min</small>';
     html += '<div class="row' + (i > 3 ? ' far' : '') + (mins < 2 ? ' soon' : '') + '">' +
             badgeFor(a.line) +
-            '<div class="mid">' + toLabel(a) + '<div class="mins">' + label + '</div></div>' +
+            '<div class="mins">' + label + '</div>' +
             '<div class="clk">' + clockStr(a.ts) + '</div></div>';
   });
   el.innerHTML = html;
@@ -365,6 +361,31 @@ function renderCrumbs() {
 $('c0').onclick = function() { openStep(0); };
 $('c1').onclick = function() { openStep(1); };
 $('c2').onclick = function() { openStep(2); };
+
+// Where trains in one direction are headed, grouped by destination (most trains first)
+function destinations(dir) {
+  var by = {};
+  arrivals.forEach(function(a) {
+    if (a.dir !== dir || a.end || !a.to) return;
+    var d = by[a.to] = by[a.to] || { to: a.to, n: 0, lines: {} };
+    d.n++;
+    d.lines[a.line.replace(/X$/, '')] = true;
+  });
+  return Object.keys(by).map(function(k) { return by[k]; })
+    .sort(function(x, y) { return y.n - x.n; }).slice(0, 3);
+}
+function destHtml(dir) {
+  if (listState === 'loading') return '<div class="dest">loading destinations…</div>';
+  var ds = destinations(dir);
+  if (!ds.length) return '';
+  return ds.map(function(d) {
+    var chips = Object.keys(d.lines).sort().map(function(l) {
+      var g = groupOf(l);
+      return '<span class="mb" style="background:' + g.bg + ';color:' + g.fg + '">' + l + '</span>';
+    }).join('');
+    return '<div class="dest">' + chips + '<span class="nm">to ' + esc(d.to) + '</span></div>';
+  }).join('');
+}
 
 // ── Dial ──────────────────────────────────────────
 var STEP_DEG = 32;
@@ -507,7 +528,7 @@ function onDialMove() {
     $('ro-sub').textContent = (gpsOk ? distLabel(s.dist) + ' · ' : '') + s.routes.filter(function(r) { return !/X$/.test(r); }).join(' ');
   } else if (dial.kind === 'dir') {
     $('ro-big').textContent = dirName(it.id);
-    $('ro-sub').textContent = st ? st.name : '';
+    $('ro-sub').innerHTML = destHtml(it.id);
   } else if (dial.kind === 'color') {
     var on = !sel.off[it.id];
     $('ro-big').textContent = groupLetters(it.g, st).split('').join(' ');
