@@ -2,7 +2,8 @@
  * buildStations.mjs
  *
  * Builds public/stations.json (every subway station complex with a location and
- * the routes that serve it) from MTA's static GTFS feed.
+ * the routes that serve it) and public/stops.json (stop id -> name, for
+ * "toward X" labels) from MTA's static GTFS feed.
  *
  * Usage:
  *   node scripts/buildStations.mjs [gtfsDir]
@@ -20,6 +21,7 @@ import { execFileSync } from 'node:child_process';
 
 const ZIP_URL = 'https://rrgtfsfeeds.s3.amazonaws.com/gtfs_subway.zip';
 const OUT = new URL('../public/stations.json', import.meta.url);
+const OUT_NAMES = new URL('../public/stops.json', import.meta.url);
 
 async function getDir() {
   if (process.argv[2]) return process.argv[2];
@@ -118,4 +120,9 @@ const stations = Object.values(groups).map(members => {
 }).filter(s => s.routes.length).sort((a, b) => a.name.localeCompare(b.name));
 
 fs.writeFileSync(OUT, JSON.stringify(stations));
+
+// parent stop id -> name, used to label where a train is headed (its last stop)
+const names = {};
+Object.values(parents).forEach(p => { names[p.id] = p.name; });
+fs.writeFileSync(OUT_NAMES, JSON.stringify(names));
 console.log('wrote', stations.length, 'stations to', OUT.pathname);

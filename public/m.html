@@ -70,10 +70,14 @@
     }
     .row .mins { flex:1; padding-left:16px; font-size:28px; color:#e8e8e8; }
     .row .mins small { font-size:15px; color:#9a9a9a; }
+    .row .mid .to { display:block; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#8a8a8a; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .row .mid .to b { color:#bbb; font-weight:bold; }
     .row.soon .mins { color:#6ee7b7; }
     .row .clk { font-size:15px; color:#8a8a8a; }
     .row.far .badge { width:36px; height:36px; line-height:36px; font-size:18px; border-radius:18px; margin:0 4px; }
     .row.far .mins { font-size:20px; color:#bbb; }
+    .row .mid { flex:1; min-width:0; padding-left:16px; }
+    .row .mid .mins { padding-left:0; }
 
     .msg { padding:28px 16px; font-size:14px; letter-spacing:2px; color:#6a6a6a; text-transform:uppercase; line-height:1.6; }
 
@@ -306,6 +310,11 @@ function startPolling() {
 }
 
 // ── List ──────────────────────────────────────────
+function toLabel(a) {
+  if (a.end) return '<div class="to">ends here</div>';
+  return a.to ? '<div class="to">toward <b>' + esc(a.to) + '</b></div>' : '';
+}
+
 function renderList() {
   var st = station();
   var el = $('list');
@@ -329,7 +338,7 @@ function renderList() {
     var label = mins < 0.5 ? 'now' : Math.max(1, Math.round(mins)) + '<small> min</small>';
     html += '<div class="row' + (i > 3 ? ' far' : '') + (mins < 2 ? ' soon' : '') + '">' +
             badgeFor(a.line) +
-            '<div class="mins">' + label + '</div>' +
+            '<div class="mid">' + toLabel(a) + '<div class="mins">' + label + '</div></div>' +
             '<div class="clk">' + clockStr(a.ts) + '</div></div>';
   });
   el.innerHTML = html;
