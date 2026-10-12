@@ -6,7 +6,7 @@ var MAX_ARRIVAL_MINS = 40;
 var BASE = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs';
 
 var STATION_FEEDS = [
-  { key: '50th', feedUrl: BASE + '-ace',  stopIds: ['A28N', 'A28S'] },
+  { key: '50th', feedUrl: BASE + '-ace',  stopIds: ['A25N', 'A25S'] },
   { key: '49th', feedUrl: BASE + '-nqrw', stopIds: ['R15N', 'R15S'] },
   { key: '42nd', feedUrl: BASE + '-ace',  stopIds: ['A27N', 'A27S'] },
   { key: '42nd', feedUrl: BASE + '-nqrw', stopIds: ['R16N', 'R16S'] },

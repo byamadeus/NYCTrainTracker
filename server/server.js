@@ -13,11 +13,11 @@ var MAX_ARRIVAL_MINS = 40;
 var BASE = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs';
 
 // ── Which stop IDs live at which station, and which feed to fetch them from ──
-// A27 = 42nd St / Port Authority (A,C,E)   A28 = 50th St (C,E)
+// A27 = 42nd St / Port Authority (A,C,E)   A25 = 50th St (C,E)
 // R15 = 49th St (N,R,W)                    R16 = Times Sq (N,Q,R,W)
 // 127 = Times Sq (1,2,3)
 var STATION_FEEDS = [
-  { key: '50th', feedUrl: BASE + '-ace',  stopIds: ['A28N', 'A28S'] },
+  { key: '50th', feedUrl: BASE + '-ace',  stopIds: ['A25N', 'A25S'] },
   { key: '49th', feedUrl: BASE + '-nqrw', stopIds: ['R15N', 'R15S'] },
   { key: '42nd', feedUrl: BASE + '-ace',  stopIds: ['A27N', 'A27S'] },
   { key: '42nd', feedUrl: BASE + '-nqrw', stopIds: ['R16N', 'R16S'] },
