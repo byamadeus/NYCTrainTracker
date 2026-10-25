@@ -197,7 +197,7 @@ var gpsOk = false;
 var pos = null;
 
 var sel = {
-  stationId: store.get('m.station'),
+  stationId: null,              // location is re-grabbed on every load
   dir: store.get('m.dir') || 'N',
   off: (function() { try { return JSON.parse(store.get('m.off') || '{}'); } catch (e) { return {}; } })()
 };
@@ -267,7 +267,7 @@ function locate() {
     if (step === 0) openStep(0);
   }, function() {
     noGps('gps off · showing midtown');
-  }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 });
+  }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 0 });
 }
 function noGps(msg) {
   gpsOk = false;
@@ -543,7 +543,6 @@ function confirm() {
   if (dial.kind === 'station') {
     var changed = sel.stationId !== it.id;
     sel.stationId = it.id;
-    store.set('m.station', it.id);
     if (changed) { sel.off = {}; store.set('m.off', '{}'); }
     arrivals = []; listState = 'loading'; fetchedAt = 0;
     fetchArrivals(); startPolling();
@@ -592,23 +591,9 @@ window.addEventListener('resize', function() { if (dial.items.length) paintDial(
     if (xhr.readyState !== 4) return;
     if (xhr.status !== 200) { $('status').textContent = 'station list failed'; return; }
     all = JSON.parse(xhr.responseText);
-    var st = station();
-    if (st) {
-      // returning visitor: show their trains immediately, dial stays out of the way
-      pos = { lat: st.lat, lon: st.lon };
-      rankNearby();
-      listState = 'loading';
-      fetchArrivals(); startPolling();
-      renderList();
-      step = 3;
-      $('dock').className = 'min';
-      renderCrumbs();
-      locate();
-    } else {
-      rankNearby();
-      openStep(0);
-      locate();
-    }
+    rankNearby();
+    openStep(0);
+    locate();
   };
   xhr.send();
 })();
